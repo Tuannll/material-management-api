@@ -1,0 +1,75 @@
+@TH4_HostAddress = http://localhost:5018
+
+### Get all materials
+GET {{TH4_HostAddress}}/api/materials
+Accept: application/json
+
+###
+
+### Get material by id
+GET {{TH4_HostAddress}}/api/materials/1
+Accept: application/json
+
+###
+
+### Get inner join materials
+GET {{TH4_HostAddress}}/api/materials/inner-join
+Accept: application/json
+
+###
+
+### Get left join materials
+GET {{TH4_HostAddress}}/api/materials/left-join
+Accept: application/json
+
+###
+
+### Create new material
+POST {{TH4_HostAddress}}/api/materials
+Content-Type: application/json
+
+{
+  "name": "Thép không gỉ",
+  "unit": "kg",
+  "unitPrice": 250000,
+  "supplierId": 1
+}
+
+###
+
+### Update material
+PUT {{TH4_HostAddress}}/api/materials/1
+Content-Type: application/json
+
+{
+  "name": "Thép không gỉ (cập nhật)",
+  "unit": "kg",
+  "unitPrice": 280000,
+  "supplierId": 1
+}
+
+###
+
+### Delete material by id
+DELETE {{TH4_HostAddress}}/api/materials/1
+Accept: application/json
+
+###
+
+### Get all materials with pagination
+GET {{TH4_HostAddress}}/api/materials?pageIndex=1&pageSize=5
+Accept: application/json
+
+###
+
+### Get all materials with keyword filter
+GET {{TH4_HostAddress}}/api/materials?keyword=thép
+Accept: application/json
+
+###
+
+### Get all materials with price filter
+GET {{TH4_HostAddress}}/api/materials?minPrice=100000&maxPrice=500000
+Accept: application/json
+
+###

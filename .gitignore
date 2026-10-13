@@ -1,0 +1,42 @@
+# Build results
+bin/
+obj/
+
+# Visual Studio / Rider / VS Code local files
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# .NET generated files
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+
+# Logs and diagnostics
+*.log
+logs/
+
+# Local environment and secrets
+.env
+.env.*
+*.Development.local.json
+appsettings.*.local.json
+
+# Publish outputs
+publish/
+artifacts/
+
+# Archives and submitted packages
+*.rar
+*.zip
+*.7z
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store
