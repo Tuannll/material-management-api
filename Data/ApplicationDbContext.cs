@@ -71,7 +71,7 @@ public class ApplicationDbContext : DbContext
                 .IsUnique()
                 .HasDatabaseName("IX_Materials_Name_Unique");
 
-            entity.HasOne(m => m.Supplier)
+            entity.HasOne<Supplier>()
                 .WithMany()
                 .HasForeignKey(m => m.SupplierId)
                 .OnDelete(DeleteBehavior.SetNull)
