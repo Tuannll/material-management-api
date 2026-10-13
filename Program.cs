@@ -1,7 +1,7 @@
 using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using TH4.Data;
 using TH4.Middleware;
 using TH4.Models.Common;
