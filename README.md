@@ -1,11 +1,27 @@
-# Construction Material Management API 🏗️
+<div align="center">
 
-[![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
-[![.NET Build](https://github.com/Tuannll/material-management-api/actions/workflows/dotnet.yml/badge.svg)](https://github.com/Tuannll/material-management-api/actions/workflows/dotnet.yml)
-[![ASP.NET Core](https://img.shields.io/badge/ASP.NET%20Core-Web%20API-blue?logo=csharp)](https://learn.microsoft.com/aspnet/core)
-[![Entity Framework Core](https://img.shields.io/badge/EF%20Core-10.0-6C257E?logo=nuget)](https://learn.microsoft.com/ef/core)
-[![Swagger](https://img.shields.io/badge/OpenAPI-Swagger-85EA2D?logo=swagger&logoColor=black)](https://swagger.io/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+# 🏗️ Construction Material Management API
+
+**Production-ready ASP.NET Core 10 Web API quản lý vật tư xây dựng & so sánh chuyên sâu LINQ Method vs. Query Syntax.**
+
+[![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?style=flat-square&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![.NET Build](https://github.com/Tuannll/material-management-api/actions/workflows/dotnet.yml/badge.svg?style=flat-square)](https://github.com/Tuannll/material-management-api/actions/workflows/dotnet.yml)
+[![ASP.NET Core](https://img.shields.io/badge/ASP.NET%20Core-Web%20API-blue?style=flat-square&logo=csharp)](https://learn.microsoft.com/aspnet/core)
+[![Entity Framework Core](https://img.shields.io/badge/EF%20Core-10.0-6C257E?style=flat-square&logo=nuget)](https://learn.microsoft.com/ef/core)
+[![Swagger](https://img.shields.io/badge/OpenAPI-Swagger-85EA2D?style=flat-square&logo=swagger&logoColor=black)](https://swagger.io/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
+
+<br />
+
+<p align="center">
+  <img src="./assets/swagger.png" alt="Swagger UI Demo" width="850" />
+</p>
+
+[Tính năng](#-tính-năng-nổi-bật) • [Cấu trúc](#-cấu-trúc-dự-án) • [Khởi chạy](#-khởi-chạy-dự-án) • [API](#-danh-sách-api-endpoints) • [Kiểm thử LINQ](#-hướng-dẫn-kiểm-thử-linq-chuyên-sâu) • [Đóng góp](#-đóng-góp) • [License](#-license)
+
+---
+
+</div>
 
 RESTful Web API quản lý danh mục vật tư xây dựng và nhà cung cấp, thiết kế theo tiêu chuẩn Clean Architecture với ASP.NET Core 10 và Entity Framework Core. Dự án cung cấp triển khai song song giữa **LINQ Method Syntax** và **LINQ Query Syntax**, hỗ trợ phân giải động runtime, kết hợp phân trang chuẩn, lọc nâng cao và cơ chế xử lý lỗi tập trung.
 
@@ -35,10 +51,10 @@ RESTful Web API quản lý danh mục vật tư xây dựng và nhà cung cấp,
 
 ---
 
-## 🏗️ Cấu Trúc Dự Án
+## 📁 Cấu Trúc Dự Án
 
 ```text
-TH4/
+material-management-api/
 ├── Controllers/
 │   └── MaterialsController.cs         # REST API endpoints, routing, OpenAPI annotations
 ├── Data/
@@ -82,6 +98,9 @@ TH4/
 ### Yêu cầu hệ thống
 - [.NET 10.0 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) trở lên.
 - (Tùy chọn) SQL Server nếu muốn lưu dữ liệu thực tế.
+
+> [!TIP]
+> Ứng dụng tự động fallback sang In-Memory Database (`TH4_Db`) nếu không tìm thấy cấu hình SQL Server hợp lệ. Bạn có thể clone và chạy thử nghiệm ngay lập tức mà không cần cài đặt thêm bất kỳ hệ quản trị cơ sở dữ liệu nào.
 
 ### Cài đặt và chạy
 
@@ -197,6 +216,17 @@ Trường `sourceImplementation` trong dữ liệu trả về sẽ thể hiện 
   ]
 }
 ```
+
+---
+
+## 🤝 Đóng Góp
+
+Mọi đóng góp nhằm cải thiện và phát triển dự án đều được hoan nghênh:
+1. Fork repository.
+2. Tạo nhánh tính năng (`git checkout -b feature/AmazingFeature`).
+3. Commit thay đổi (`git commit -m "feat: add some AmazingFeature"`).
+4. Push lên branch (`git push origin feature/AmazingFeature`).
+5. Mở một Pull Request.
 
 ---
 
