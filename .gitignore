@@ -35,6 +35,7 @@ artifacts/
 *.rar
 *.zip
 *.7z
+*.pdf
 
 # OS files
 Thumbs.db
