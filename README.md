@@ -1,6 +1,7 @@
 # Construction Material Management API 🏗️
 
 [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![.NET Build](https://github.com/Tuannll/material-management-api/actions/workflows/dotnet.yml/badge.svg)](https://github.com/Tuannll/material-management-api/actions/workflows/dotnet.yml)
 [![ASP.NET Core](https://img.shields.io/badge/ASP.NET%20Core-Web%20API-blue?logo=csharp)](https://learn.microsoft.com/aspnet/core)
 [![Entity Framework Core](https://img.shields.io/badge/EF%20Core-10.0-6C257E?logo=nuget)](https://learn.microsoft.com/ef/core)
 [![Swagger](https://img.shields.io/badge/OpenAPI-Swagger-85EA2D?logo=swagger&logoColor=black)](https://swagger.io/)
@@ -86,7 +87,7 @@ TH4/
 
 1. **Clone repository:**
    ```bash
-   git clone https://github.com/<your-username>/material-management-api.git
+   git clone https://github.com/Tuannll/material-management-api.git
    cd material-management-api
    ```
 
