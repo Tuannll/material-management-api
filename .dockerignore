@@ -1,0 +1,13 @@
+**/.git
+**/.gitignore
+**/.gitattributes
+**/.vs
+**/.vscode
+**/bin
+**/obj
+**/TestResults
+**/*.user
+**/*.userosscache
+**/*.suo
+Dockerfile*
+.dockerignore

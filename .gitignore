@@ -24,6 +24,9 @@ logs/
 # Local environment and secrets
 .env
 .env.*
+!.env.example
+__pycache__/
+*.py[cod]
 *.Development.local.json
 appsettings.*.local.json
 
