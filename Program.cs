@@ -26,6 +26,16 @@ builder.Services.AddControllers()
         };
     });
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -78,23 +88,39 @@ builder.Services.AddScoped<IMaterialService>(sp =>
 
 var app = builder.Build();
 
-// Ensure database and schema are created and seeded
+// Ensure database and schema are created/migrated and seeded
 using (var scope = app.Services.CreateScope())
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    var dbContext = services.GetRequiredService<ApplicationDbContext>();
+
     try
     {
-        dbContext.Database.EnsureCreated();
+        if (dbContext.Database.IsRelational())
+        {
+            logger.LogInformation("Relational database provider detected ({Provider}). Running database migrations...", dbContext.Database.ProviderName);
+            dbContext.Database.Migrate();
+            logger.LogInformation("Database migrations applied successfully.");
+        }
+        else
+        {
+            logger.LogInformation("Non-relational database provider detected ({Provider}). Ensuring database is created...", dbContext.Database.ProviderName);
+            dbContext.Database.EnsureCreated();
+        }
+
         DbInitializer.Initialize(dbContext);
+        logger.LogInformation("Database seeded successfully.");
     }
     catch (Exception ex)
     {
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        logger.LogWarning(ex, "Could not ensure database created directly; continuing.");
+        logger.LogError(ex, "An error occurred while migrating or initializing the database.");
     }
 }
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
+
+app.UseCors();
 
 if (app.Environment.IsDevelopment())
 {
@@ -106,5 +132,17 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseAuthorization();
+
+// Health check endpoint cho CD script kiểm tra sau khi deploy
+app.MapGet("/health", () => Results.Ok(new
+{
+    status = "healthy",
+    timestamp = DateTime.UtcNow,
+    version = "1.0.0"
+}))
+.WithName("HealthCheck")
+.WithTags("Health")
+.AllowAnonymous();
+
 app.MapControllers();
 app.Run();

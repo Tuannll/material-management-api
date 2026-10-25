@@ -5,8 +5,16 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn);1591;NU1903</NoWarn>
+    <NoWarn>$(NoWarn);1591;NU1902;NU1903</NoWarn>
+    <DefaultItemExcludes>$(DefaultItemExcludes);TH4.Tests\**</DefaultItemExcludes>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="TH4.Tests\**" />
+    <Content Remove="TH4.Tests\**" />
+    <EmbeddedResource Remove="TH4.Tests\**" />
+    <None Remove="TH4.Tests\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.7" />

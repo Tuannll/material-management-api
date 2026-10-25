@@ -1,5 +1,11 @@
 @TH4_HostAddress = http://localhost:5018
 
+### Health check (CD deployment verification)
+GET {{TH4_HostAddress}}/health
+Accept: application/json
+
+###
+
 ### Get all materials
 GET {{TH4_HostAddress}}/api/materials
 Accept: application/json
