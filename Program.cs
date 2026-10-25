@@ -49,7 +49,12 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
     if (!string.IsNullOrEmpty(connectionString))
     {
-        options.UseSqlServer(connectionString);
+        // ponytail: native EF Core retry covers DB boot lag, avoids Polly dependency
+        options.UseSqlServer(connectionString, sqlOptions =>
+            sqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 10,
+                maxRetryDelay: TimeSpan.FromSeconds(3),
+                errorNumbersToAdd: null));
     }
     else
     {
@@ -82,21 +87,33 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     try
     {
-        dbContext.Database.EnsureCreated();
+        if (dbContext.Database.IsRelational())
+        {
+            logger.LogInformation("Applying relational database migrations...");
+            dbContext.Database.Migrate();
+        }
+        else
+        {
+            logger.LogInformation("Applying InMemory database schema...");
+            dbContext.Database.EnsureCreated();
+        }
+
         DbInitializer.Initialize(dbContext);
+        logger.LogInformation("Database initialized and seeded successfully.");
     }
     catch (Exception ex)
     {
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        logger.LogWarning(ex, "Could not ensure database created directly; continuing.");
+        logger.LogError(ex, "Database migration/initialization failed.");
+        throw;
     }
 }
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("EnableSwagger", true))
 {
     app.UseSwagger();
     app.UseSwaggerUI(c =>
