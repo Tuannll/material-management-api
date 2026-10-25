@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using TH4.Models.Entities;
 
 namespace TH4.Data;
@@ -7,16 +8,43 @@ public static class DbInitializer
 {
     public static void Initialize(ApplicationDbContext context)
     {
-        if (!context.Suppliers.Any())
+        if (context.Database.IsRelational())
         {
-            context.Suppliers.AddRange(SeedData.Suppliers);
-            context.SaveChanges();
-        }
+            var strategy = context.Database.CreateExecutionStrategy();
+            strategy.Execute(() =>
+            {
+                using var transaction = context.Database.BeginTransaction();
+                if (!context.Suppliers.Any())
+                {
+                    context.Database.ExecuteSqlRaw("SET IDENTITY_INSERT Suppliers ON;");
+                    context.Suppliers.AddRange(SeedData.Suppliers);
+                    context.SaveChanges();
+                    context.Database.ExecuteSqlRaw("SET IDENTITY_INSERT Suppliers OFF;");
+                }
 
-        if (!context.Materials.Any())
+                if (!context.Materials.Any())
+                {
+                    context.Database.ExecuteSqlRaw("SET IDENTITY_INSERT Materials ON;");
+                    context.Materials.AddRange(SeedData.Materials);
+                    context.SaveChanges();
+                    context.Database.ExecuteSqlRaw("SET IDENTITY_INSERT Materials OFF;");
+                }
+                transaction.Commit();
+            });
+        }
+        else
         {
-            context.Materials.AddRange(SeedData.Materials);
-            context.SaveChanges();
+            if (!context.Suppliers.Any())
+            {
+                context.Suppliers.AddRange(SeedData.Suppliers);
+                context.SaveChanges();
+            }
+
+            if (!context.Materials.Any())
+            {
+                context.Materials.AddRange(SeedData.Materials);
+                context.SaveChanges();
+            }
         }
     }
 }
