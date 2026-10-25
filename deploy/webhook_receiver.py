@@ -18,6 +18,7 @@ import re
 import subprocess
 import sys
 from datetime import datetime
+from typing import Optional
 from http.server import BaseHTTPRequestHandler, HTTPServer
 try:
     from http.server import ThreadingHTTPServer
@@ -61,40 +62,57 @@ def get_compose_command():
     return ["docker-compose"]
 
 
-def update_env_file(tag: str):
-    """Update or append IMAGE_TAG in the .env file in the deploy directory."""
+def update_env_file(tag: str, image: Optional[str] = None):
+    """Update or append IMAGE_TAG (and IMAGE_NAME if provided) in the .env file in the deploy directory."""
     try:
+        # Nếu chưa có file .env, copy từ env.example hoặc .env.example để giữ nguyên SA_PASSWORD và DB config
+        if not os.path.isfile(ENV_FILE):
+            for candidate in [os.path.join(DEPLOY_DIR, "env.example"), os.path.join(DEPLOY_DIR, ".env.example")]:
+                if os.path.isfile(candidate):
+                    with open(candidate, "r", encoding="utf-8") as src, open(ENV_FILE, "w", encoding="utf-8") as dst:
+                        dst.write(src.read())
+                    logger.info(f"Initialized .env from template: {candidate}")
+                    break
+
         lines = []
         tag_found = False
+        image_found = False
         if os.path.isfile(ENV_FILE):
             with open(ENV_FILE, "r", encoding="utf-8") as f:
                 for line in f:
                     if line.strip().startswith("IMAGE_TAG="):
                         lines.append(f"IMAGE_TAG={tag}\n")
                         tag_found = True
+                    elif image and line.strip().startswith("IMAGE_NAME="):
+                        lines.append(f"IMAGE_NAME={image}\n")
+                        image_found = True
                     else:
                         lines.append(line)
         if not tag_found:
             lines.append(f"IMAGE_TAG={tag}\n")
+        if image and not image_found:
+            lines.append(f"IMAGE_NAME={image}\n")
 
         with open(ENV_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
-        logger.info(f"Updated .env with IMAGE_TAG={tag}")
+        logger.info(f"Updated .env with IMAGE_TAG={tag} (IMAGE_NAME={image})")
     except Exception as ex:
         logger.warning(f"Could not update .env file: {ex}")
 
 
-def execute_deployment(tag: str):
+def execute_deployment(tag: str, image: Optional[str] = None):
     """
-    Run docker compose pull api and docker compose up -d api.
+    Run docker compose pull api and docker compose up -d --force-recreate api.
     Returns (success: bool, pull_output: str, up_output: str, error_message: str)
     """
     compose_cmd = get_compose_command()
     cmd_env = os.environ.copy()
     cmd_env["IMAGE_TAG"] = tag
+    if image:
+        cmd_env["IMAGE_NAME"] = image
 
     pull_cmd = compose_cmd + ["pull", "api"]
-    up_cmd = compose_cmd + ["up", "-d", "api"]
+    up_cmd = compose_cmd + ["up", "-d", "--force-recreate", "api"]
 
     logger.info(f"Executing pull command: {' '.join(pull_cmd)} (IMAGE_TAG={tag})")
     pull_proc = subprocess.run(
@@ -194,11 +212,15 @@ class WebhookRequestHandler(BaseHTTPRequestHandler):
             })
             return
 
-        # Extract tag
+        # Extract tag and image
         tag = payload.get("tag") or payload.get("image_tag")
         if not tag:
             logger.warning("Request missing 'tag' field, defaulting to 'latest'")
             tag = "latest"
+
+        image = payload.get("image") or payload.get("image_name")
+        if image:
+            image = str(image).strip()
 
         # Sanitize tag
         tag = str(tag).strip()
@@ -209,14 +231,16 @@ class WebhookRequestHandler(BaseHTTPRequestHandler):
             })
             return
 
-        logger.info(f"--> Received deploy trigger for tag: {tag} from {client_ip}")
+        logger.info(f"--> Received deploy trigger for tag: {tag} (image: {image}) from {client_ip}")
 
         # Update environment and .env file
         os.environ["IMAGE_TAG"] = tag
-        update_env_file(tag)
+        if image:
+            os.environ["IMAGE_NAME"] = image
+        update_env_file(tag, image)
 
         # Execute deployment
-        success, pull_out, up_out, err_msg = execute_deployment(tag)
+        success, pull_out, up_out, err_msg = execute_deployment(tag, image)
 
         if success:
             logger.info(f" Deployment completed successfully for tag: {tag}")

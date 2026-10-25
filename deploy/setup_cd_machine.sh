@@ -69,8 +69,11 @@ echo "[INFO] Waiting for SQL Server container to initialize..."
 sleep 5
 
 # 6. Display IP and Webhook instructions
-HOST_IPS=$(hostname -I 2>/dev/null || ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1' || echo "localhost")
-PRIMARY_IP=$(echo "$HOST_IPS" | awk '{print $1}')
+# Lấy IP mạng chính kết nối ra ngoài (loại bỏ IP card ảo docker0/veth 172.x)
+PRIMARY_IP=$(ip route get 1.1.1.1 2>/dev/null | awk '{print $7}')
+if [ -z "$PRIMARY_IP" ]; then
+    PRIMARY_IP=$(hostname -I 2>/dev/null | tr ' ' '\n' | grep -v '^172\.' | grep -v '^127\.' | head -n1)
+fi
 PRIMARY_IP=${PRIMARY_IP:-localhost}
 
 echo "=========================================================="

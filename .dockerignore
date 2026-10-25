@@ -11,3 +11,7 @@
 **/*.suo
 Dockerfile*
 .dockerignore
+TH4.Tests/
+deploy/
+*.md
+

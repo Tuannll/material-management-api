@@ -122,16 +122,17 @@ app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseCors();
 
-if (app.Environment.IsDevelopment())
+// Luôn bật Swagger UI trong cả môi trường Dev và Production/Docker container để phục vụ demo
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "TH4 - Quản Lý Vật Tư API v1");
-    });
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "TH4 - Quản Lý Vật Tư API v1");
+});
 
 app.UseAuthorization();
+
+// Tự động chuyển hướng từ trang chủ về Swagger UI
+app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();
 
 // Health check endpoint cho CD script kiểm tra sau khi deploy
 app.MapGet("/health", () => Results.Ok(new

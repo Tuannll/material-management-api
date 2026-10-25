@@ -135,7 +135,7 @@ pipeline {
                         echo "[SCM Fallback] 'checkout scm' không áp dụng, thực hiện checkout GitSCM với credentials '${env.GITHUB_CREDENTIALS_ID}': ${e.message}"
                         checkout([
                             $class: 'GitSCM',
-                            branches: [[name: '*/main']],
+                            branches: [[name: '*/feat/buoi10-cicd-setup'], [name: '*/main']],
                             doGenerateSubmoduleConfigurations: false,
                             extensions: [[$class: 'CleanBeforeCheckout']],
                             userRemoteConfigs: [[
@@ -152,6 +152,7 @@ pipeline {
         // STAGE 2: UNIT TEST
         // Chạy dotnet test và xuất kết quả định dạng TRX.
         // NẾU TEST FAIL, PIPELINE DỪNG NGAY LẬP TỨC.
+        // Hỗ trợ cả khi Jenkins agent có dotnet CLI hoặc chỉ có Docker CLI.
         // =============================================================
         stage('Unit Test') {
             steps {
@@ -159,9 +160,16 @@ pipeline {
                 echo '===> STAGE 2: Chạy kiểm thử đơn vị (Unit Test)'
                 echo '===> Lệnh: dotnet test --logger "trx" --results-directory ./TestResults'
                 echo '=========================================================='
-                // Khi lệnh dotnet test có lỗi (exit code != 0), Jenkins sẽ ngắt stage ngay lập tức
-                // và chuyển hướng luồng sang khối post { failure { ... } }.
-                sh 'dotnet test --logger "trx" --results-directory ./TestResults'
+                sh '''
+                    if command -v dotnet >/dev/null 2>&1; then
+                        echo "--> Tìm thấy dotnet CLI trên agent, chạy dotnet test trực tiếp..."
+                        dotnet test TH4.sln --logger "trx" --results-directory ./TestResults
+                    else
+                        echo "--> Không có dotnet CLI trên agent, chạy qua container mcr.microsoft.com/dotnet/sdk:10.0..."
+                        docker run --rm -v "$(pwd)":/app -w /app mcr.microsoft.com/dotnet/sdk:10.0 \
+                            dotnet test TH4.sln --logger "trx" --results-directory ./TestResults
+                    fi
+                '''
             }
             post {
                 always {
@@ -215,16 +223,16 @@ pipeline {
                         echo "$DOCKER_PASS" | docker login "$TARGET_REGISTRY" -u "$DOCKER_USER" --password-stdin
 
                         echo "--> Đẩy image với tag $BUILD_TAG và latest lên $TARGET_REGISTRY..."
-                        docker push "$TARGET_REGISTRY/$IMAGE_NAME:$BUILD_TAG" || true
-                        docker push "$TARGET_REGISTRY/$IMAGE_NAME:latest" || true
+                        docker push "$TARGET_REGISTRY/$IMAGE_NAME:$BUILD_TAG"
+                        docker push "$TARGET_REGISTRY/$IMAGE_NAME:latest"
 
                         # Gắn thêm tag với namespace theo tài khoản nếu registry yêu cầu (ví dụ: ghcr.io/<username>/<image>)
-                        if [ -n "$DOCKER_USER" ]; then
+                        if [ -n "$DOCKER_USER" ] && [ "$TARGET_REGISTRY" != "localhost:5000" ]; then
                             echo "--> Đẩy image bổ sung namespace: $TARGET_REGISTRY/$DOCKER_USER/$IMAGE_NAME..."
-                            docker tag "$IMAGE_NAME:$BUILD_TAG" "$TARGET_REGISTRY/$DOCKER_USER/$IMAGE_NAME:$BUILD_TAG" || true
-                            docker tag "$IMAGE_NAME:latest" "$TARGET_REGISTRY/$DOCKER_USER/$IMAGE_NAME:latest" || true
-                            docker push "$TARGET_REGISTRY/$DOCKER_USER/$IMAGE_NAME:$BUILD_TAG" || true
-                            docker push "$TARGET_REGISTRY/$DOCKER_USER/$IMAGE_NAME:latest" || true
+                            docker tag "$IMAGE_NAME:$BUILD_TAG" "$TARGET_REGISTRY/$DOCKER_USER/$IMAGE_NAME:$BUILD_TAG"
+                            docker tag "$IMAGE_NAME:latest" "$TARGET_REGISTRY/$DOCKER_USER/$IMAGE_NAME:latest"
+                            docker push "$TARGET_REGISTRY/$DOCKER_USER/$IMAGE_NAME:$BUILD_TAG"
+                            docker push "$TARGET_REGISTRY/$DOCKER_USER/$IMAGE_NAME:latest"
                         fi
                     '''
                 }
@@ -241,8 +249,8 @@ pipeline {
                 echo "===> STAGE 5: Kích hoạt triển khai CD sang máy B"
                 echo "===> Mục tiêu: http://${env.TARGET_CD_HOST}:${env.TARGET_CD_PORT}/deploy"
                 echo '=========================================================='
-                // Gọi lệnh curl chuẩn theo đúng định dạng yêu cầu Buổi 10
-                sh 'curl -s -X POST http://${TARGET_CD_HOST}:${TARGET_CD_PORT}/deploy -H "Content-Type: application/json" -d "{\\"image\\":\\"${IMAGE_NAME}\\",\\"tag\\":\\"${BUILD_TAG}\\"}"'
+                // Gọi lệnh curl chuẩn có cờ -f (--fail) để bắt chính xác lỗi HTTP >= 400
+                sh 'curl -f -s -S -X POST http://${TARGET_CD_HOST}:${TARGET_CD_PORT}/deploy -H "Content-Type: application/json" -d "{\\"image\\":\\"${IMAGE_NAME}\\",\\"tag\\":\\"${BUILD_TAG}\\"}"'
             }
         }
     }
